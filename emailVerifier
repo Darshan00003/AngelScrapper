@@ -1,0 +1,60 @@
+from validate_email import validate_email
+import csv
+import re
+
+
+def writeToCsv(companyName, name, mail):
+    filename = 'FoundersMail.csv'
+    founderMail = {}
+    founderMail['CompanyName'] = companyName
+    founderMail['Founders'] = name
+    founderMail['FoundersMail'] = mail
+    with open(filename, 'a') as f:
+        w = csv.DictWriter(f, ['CompanyName', 'Founders', 'FoundersMail'])
+        w.writerow(founderMail)
+        f.close()
+
+
+def isValidMail(firstName, lastName, mailServer):
+    if validate_email(firstName + lastName + mailServer):
+        return firstName + lastName + mailServer
+    elif validate_email(firstName + '.' + lastName + mailServer):
+        return firstName + '.' + lastName + mailServer
+    elif validate_email(firstName + mailServer):
+        return firstName + mailServer
+    elif validate_email(lastName + mailServer):
+        return lastName + mailServer
+    else :
+        return ''
+
+
+def getFoundersMail(companyName, foundersList):
+    
+    if foundersList is not None :
+        names = foundersList[:-2].split(',')
+        mailServer = '@' + companyName.lower() + '.com'
+        for name in names:
+            firstName = ''
+            lastName = ''
+            if len(name.split()) > 0:
+                firstName = name.split()[0]
+            if len(name.split()) > 1 :
+                lastName = name.split()[1]
+            mail = isValidMail(firstName, lastName, mailServer)
+            writeToCsv(companyName, name, mail)
+
+
+def csv_dict_reader(file_obj):
+    reader = csv.DictReader(file_obj, delimiter=',')
+    for line in reader:
+        getFoundersMail(line["CompanyName"], line["Founders"])
+
+
+filename = 'FoundersMail.csv'
+with open(filename, 'w') as f:
+    w = csv.DictWriter(f, ['CompanyName', 'Founders', 'FoundersMail'])
+    w.writeheader()
+    f.close()
+
+with open("Founders.csv") as f:
+    csv_dict_reader(f)
